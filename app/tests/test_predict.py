@@ -5,14 +5,16 @@ from app.main import app
 client = TestClient(app)
 
 
+# todo
+
 def test_valid_input():
     """Return 200 Success when input is valid."""
     response = client.post(
         '/predict',
         json={
-            'x1': 3.14,
-            'x2': -42,
-            'x3': 'banjo'
+            'title': 'foo bar bar barrrr',
+            'selftext': 'banjo didjeridoo djembe khomuz igil',
+            'n_results': 4
         }
     )
     body = response.json()
@@ -22,15 +24,15 @@ def test_valid_input():
 
 
 def test_invalid_input():
-    """Return 422 Validation Error when x1 is negative."""
+    """Return 422 Validation Error when n_results is negative."""
     response = client.post(
         '/predict',
         json={
-            'x1': -3.14,
-            'x2': -42,
-            'x3': 'banjo'
+            'title': 'foo bar bar barrrr',
+            'selftext': 'banjo didjeridoo djembe khomuz igil',
+            'n_results': -3
         }
     )
     body = response.json()
     assert response.status_code == 422
-    assert 'x1' in body['detail'][0]['loc']
+    assert 'selftext' in body['detail'][1]['loc']
