@@ -59,5 +59,4 @@ async def dummy_predict(item: Item):
     recomendations = random.sample(predictions, n_results)
     for rank, subreddit in enumerate(recomendations):
         recs[rank] = subreddit
-    print(f"foobar {recs}")
     return {'recommendations': recs}
