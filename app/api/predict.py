@@ -1,6 +1,6 @@
 import logging
 import random
-import astropy.constants.tests.test_pickle
+#import astropy.constants.tests.test_pickle
 
 from fastapi import APIRouter
 import pandas as pd
@@ -25,7 +25,7 @@ class Item(BaseModel):
         return pd.DataFrame([dict(self)])
 
     @ validator('n_results')
-    def n_results_postive(self, value):
+    def n_results_positive(cls, value):
         """Validate that n_results is a positive number."""
         assert value > 0, f'n_results == {value}, must be > 0'
         return value
@@ -59,5 +59,5 @@ async def dummy_predict(item: Item):
     recomendations = random.sample(predictions, n_results)
     for rank, subreddit in enumerate(recomendations):
         recs[rank] = subreddit
-
+    print(f"foobar {recs}")
     return {'recommendations': recs}
