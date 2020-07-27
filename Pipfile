@@ -21,6 +21,7 @@ gensim = "*"
 nltk = "*"
 bs4 = "*"
 matplotlib = "*"
+pydantic = "*"
 
 [requires]
 python_version = "3.7"

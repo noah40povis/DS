@@ -1,1 +1,7 @@
 GoogleNews-vectors-negative300.bin.gz
+notebooks/sgd_jld.pkl
+notebooks/rspct.tsv
+notebooks/nb_selftext_jl.pkl
+notebooks/cleaned_reduced.tsv
+notebooks/reduced30k.tsv
+notebooks/.ipynb_checkpoints/

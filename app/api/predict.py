@@ -9,57 +9,55 @@ from pydantic import BaseModel, Field, validator
 log = logging.getLogger(__name__)
 router = APIRouter()
 
-with open('.notebooks/nb_selftext.pkl', 'rb') as file:
-    model = pickle.load(file)
-
-
-
-"""TEMP:  this is the function used to clean the training text. used it on the strings
-coming from the API to ensure consistency
-"""
-REPLACE_BY_SPACE_RE = re.compile('[/(){}\[\]\|@,;]')
-BAD_SYMBOLS_RE = re.compile('[^0-9a-z #+_]')
-STOPWORDS = set(stopwords.words('english'))
-
-
-def clean_text(text):
-    """
-        text: a string
-        
-        return: modified initial string
-    """
-    text = BeautifulSoup(text, "lxml").text # HTML decoding
-    text = text.lower() # lowercase text
-    text = REPLACE_BY_SPACE_RE.sub(' ', text) # replace REPLACE_BY_SPACE_RE symbols by space in text
-    text = BAD_SYMBOLS_RE.sub('', text) # delete symbols which are in BAD_SYMBOLS_RE from text
-    text = ' '.join(word for word in text.split() if word not in STOPWORDS) # delete stopwords from text
-    return text
-
 
 class Item(BaseModel):
     """Use this data model to parse the request body JSON."""
 
-    x1: float = Field(..., example=3.14)
-    x2: int = Field(..., example=-42)
-    x3: str = Field(..., example='banjo')
+    title: str = Field(..., example="my hangnail is getting so painful")
+    selftext: str = Field(..., example=(f"Comedian Nigel Ng to collaborate with BBC"
+                                        f"host Hersha Patel on cooking video after Asian"
+                                        f"netizens in uproar over controversial egg fried"
+                                        f"rice tutorial."))
+    n_results: int = Field(..., example=5)
 
     def to_df(self):
         """Convert pydantic object to pandas dataframe with 1 row."""
         return pd.DataFrame([dict(self)])
 
-    @validator('x1')
-    def x1_must_be_positive(cls, value):
-        """Validate that x1 is a positive number."""
-        assert value > 0, f'x1 == {value}, must be > 0'
+    @ validator('n_results')
+    def n_results_postive(self, value):
+        """Validate that n_results is a positive number."""
+        assert value > 0, f'n_results == {value}, must be > 0'
         return value
 
 
-@router.post('/predict')
-async def predict(item: Item):
-    """Make baseline predictions for classification problem."""
-    X_new = item.to_df()
-    log.info(X_new)
-    y_pred = model.predict(X_new)
-    return {
-        'prediction': y_pred
-    }
+@ router.post('/predict')
+async def dummy_predict(item: Item):
+    """dummy model to return some data for testing the API
+
+    Parameter input :  str title, str selftext, int n_results
+
+    Returns dict recommendations :
+
+    """
+
+    predictions = ['HomeDepot', 'DunderMifflin', 'hometheater', 'EnterTheGungeon',
+                   'cinematography', 'Tinder', 'LearnJapanese',
+                   'futarp', 'OnePieceTC', 'Firefighting', 'fleshlight', 'lotr',
+                   'knifeclub', 'sociopath', 'bleach', 'SCCM', 'GhostRecon',
+                   'Ayahuasca', 'codes', 'preppers', 'grammar', 'NewSkaters',
+                   'Truckers', 'southpark', 'Dreams', 'JUSTNOMIL', 'bigdickproblems',
+                   'EternalCardGame', 'evangelion', 'mercedes_benz', 'Cuckold',
+                   'writing', 'afinil', 'synology', 'thinkpad', 'MDMA', 'sailing',
+                   'cfs', 'siacoin', 'ASUS', 'OccupationalTherapy', 'biology',
+                   'thelastofus', 'lonely', 'swrpg', 'acting', 'transformers',
+                   'vergecurrency', 'Beekeeping']
+
+    recs = {}  # store in dict
+    n_results = item.n_results
+
+    recomendations = random.sample(predictions, n_results)
+    for rank, subreddit in enumerate(recomendations):
+        recs[rank] = subreddit
+
+    return {'recommendations': recs}
