@@ -57,6 +57,4 @@ async def dummy_predict(item: Item):
     n_results = item.n_results
 
     recomendations = random.sample(predictions, n_results)
-    for rank, subreddit in enumerate(recomendations):
-        recs[rank] = subreddit
-    return {'recommendations': recs}
+    return {'subreddits': recommendations }
