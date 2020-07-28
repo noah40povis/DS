@@ -23,11 +23,6 @@ class Item(BaseModel):
         """Convert pydantic object to pandas dataframe with 1 row."""
         return pd.DataFrame([dict(self)])
 
-    @ validator('n_results')
-    def n_results_positive(cls, value):
-        """Validate that n_results is a positive number."""
-        assert value > 0, f'n_results == {value}, must be > 0'
-        return value
 
 
 @ router.post('/test_predict')
@@ -56,10 +51,14 @@ async def dummy_predict(item: Item):
     n_results = 5             # fix to 5 results 
     recommendations = random.sample(predictions, n_results)
     return {'subreddits': recommendations }
+
 @ router.post('/predict')
 async def kpredict(item: Item):
-    model = load('subreddit_mvp.joblib')
+    #model = load('/home/dliu/lambda/build/app/api/subreddit_mvp.joblib')   # for local debug
+    #tfidf = load('/home/dliu/lambda/build/app/api/reddit_mvp_tfidf.joblib')
+    model = load('subreddit_mvp.joblib')   
     tfidf = load('reddit_mvp_tfidf.joblib')
+    
     df = pd.read_csv('https://raw.githubusercontent.com/worldwidekatie/BW_4/master/25325_subreddits.csv')
     subreddits = df['subreddit']
 
@@ -69,5 +68,5 @@ async def kpredict(item: Item):
     for i in pred[1][0]:
         predictions.append(subreddits[i])
         output = list(predictions)
-    return output
+    return {'recommendations' : output }
                                                                     
