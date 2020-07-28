@@ -1,7 +1,6 @@
 import logging
 import random
-#import astropy.constants.tests.test_pickle
-
+from joblib import load
 from fastapi import APIRouter
 import pandas as pd
 from pydantic import BaseModel, Field, validator
@@ -58,3 +57,19 @@ async def dummy_predict(item: Item):
 
     recomendations = random.sample(predictions, n_results)
     return {'subreddits': recommendations }
+
+def kpredict(item: Item):
+    model = load('subreddit_mvp.joblib')
+    tfidf = load('reddit_mvp_tfidf.joblib')
+    df = pd.read_csv('https://raw.githubusercontent.com/worldwidekatie/BW_4/master/25325_subreddits.csv')
+    subreddits = df['subreddit']
+
+    predictions = []
+    links = []
+    query = tfidf.transform([item.title+item.selftext])
+    pred = model.kneighbors(query.todense())
+    for i in pred[1][0]:
+        predictions.append(subreddits[i])
+        output = list(predictions)
+    return output
+                                                                    
