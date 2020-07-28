@@ -54,8 +54,8 @@ async def dummy_predict(item: Item):
 
 @ router.post('/predict')
 async def kpredict(item: Item):
-    #model = load('/home/dliu/lambda/build/app/api/subreddit_mvp.joblib')   # for local debug
-    #tfidf = load('/home/dliu/lambda/build/app/api/reddit_mvp_tfidf.joblib')
+   # model = load('/home/dliu/lambda/build/app/api/subreddit_mvp.joblib')   # for local debug
+   # tfidf = load('/home/dliu/lambda/build/app/api/reddit_mvp_tfidf.joblib')
     model = load('subreddit_mvp.joblib')   
     tfidf = load('reddit_mvp_tfidf.joblib')
     
