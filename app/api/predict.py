@@ -1,7 +1,7 @@
 import logging
 import random
-#import astropy.constants.tests.test_pickle
-
+import sklearn
+from joblib import load
 from fastapi import APIRouter
 import pandas as pd
 from pydantic import BaseModel, Field, validator
@@ -18,20 +18,14 @@ class Item(BaseModel):
                                         f"host Hersha Patel on cooking video after Asian"
                                         f"netizens in uproar over controversial egg fried"
                                         f"rice tutorial."))
-    n_results: int = Field(..., example=5)
 
     def to_df(self):
         """Convert pydantic object to pandas dataframe with 1 row."""
         return pd.DataFrame([dict(self)])
 
-    @ validator('n_results')
-    def n_results_positive(cls, value):
-        """Validate that n_results is a positive number."""
-        assert value > 0, f'n_results == {value}, must be > 0'
-        return value
 
 
-@ router.post('/predict')
+@ router.post('/test_predict')
 async def dummy_predict(item: Item):
     """dummy model to return some data for testing the API
 
@@ -54,7 +48,27 @@ async def dummy_predict(item: Item):
                    'vergecurrency', 'Beekeeping']
 
     recs = {}  # store in dict
-    n_results = item.n_results
+    
+    n_results = 5             # fix to 5 results 
 
     recommendations = random.sample(predictions, n_results)
     return {'subreddits': recommendations }
+
+@ router.post('/predict')
+async def kpredict(item: Item):
+    #model = load('/home/dliu/lambda/build/app/api/subreddit_mvp.joblib')   # for local debug
+    #tfidf = load('/home/dliu/lambda/build/app/api/reddit_mvp_tfidf.joblib')
+    model = load('subreddit_mvp.joblib')   
+    tfidf = load('reddit_mvp_tfidf.joblib')
+    
+    df = pd.read_csv('https://raw.githubusercontent.com/worldwidekatie/BW_4/master/25325_subreddits.csv')
+    subreddits = df['subreddit']
+
+    predictions = []
+    query = tfidf.transform([item.title+item.selftext])
+    pred = model.kneighbors(query.todense())
+    for i in pred[1][0]:
+        predictions.append(subreddits[i])
+        output = list(predictions)
+    return {'recommendations' : output }
+                                                                    
