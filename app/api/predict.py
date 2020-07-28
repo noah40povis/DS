@@ -14,7 +14,7 @@ class Item(BaseModel):
     """Use this data model to parse the request body JSON."""
 
     title: str = Field(..., example="my hangnail is getting so painful")
-    selftext: str = Field(..., example=(f"Comedian Nigel Ng to collaborate with BBC"
+    selftext: str = Field(..., example=(f"Comedian Joe Rogan to collaborate with BBC"
                                         f"host Hersha Patel on cooking video after Asian"
                                         f"netizens in uproar over controversial egg fried"
                                         f"rice tutorial."))
@@ -48,7 +48,9 @@ async def dummy_predict(item: Item):
                    'vergecurrency', 'Beekeeping']
 
     recs = {}  # store in dict
+    
     n_results = 5             # fix to 5 results 
+
     recommendations = random.sample(predictions, n_results)
     return {'subreddits': recommendations }
 
