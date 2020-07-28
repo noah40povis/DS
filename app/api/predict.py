@@ -1,5 +1,6 @@
 import logging
 import random
+import sklearn
 from joblib import load
 from fastapi import APIRouter
 import pandas as pd
@@ -17,7 +18,6 @@ class Item(BaseModel):
                                         f"host Hersha Patel on cooking video after Asian"
                                         f"netizens in uproar over controversial egg fried"
                                         f"rice tutorial."))
-    n_results: int = Field(..., example=5)
 
     def to_df(self):
         """Convert pydantic object to pandas dataframe with 1 row."""
@@ -30,7 +30,7 @@ class Item(BaseModel):
         return value
 
 
-@ router.post('/predict')
+@ router.post('/test_predict')
 async def dummy_predict(item: Item):
     """dummy model to return some data for testing the API
 
@@ -53,19 +53,17 @@ async def dummy_predict(item: Item):
                    'vergecurrency', 'Beekeeping']
 
     recs = {}  # store in dict
-    n_results = item.n_results
-
-    recomendations = random.sample(predictions, n_results)
+    n_results = 5             # fix to 5 results 
+    recommendations = random.sample(predictions, n_results)
     return {'subreddits': recommendations }
-
-def kpredict(item: Item):
+@ router.post('/predict')
+async def kpredict(item: Item):
     model = load('subreddit_mvp.joblib')
     tfidf = load('reddit_mvp_tfidf.joblib')
     df = pd.read_csv('https://raw.githubusercontent.com/worldwidekatie/BW_4/master/25325_subreddits.csv')
     subreddits = df['subreddit']
 
     predictions = []
-    links = []
     query = tfidf.transform([item.title+item.selftext])
     pred = model.kneighbors(query.todense())
     for i in pred[1][0]:
