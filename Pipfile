@@ -16,12 +16,11 @@ fastapi = "*"
 pandas = "*"
 uvicorn = "*"
 plotly = "*"
-scikit-learn = "*"
-gensim = "*"
+scikit-learn = {version = "0.22.2.post1"}
 nltk = "*"
 bs4 = "*"
 matplotlib = "*"
 pydantic = "*"
-
+joblib = {version = "0.16.0"}
 [requires]
 python_version = "3.7"
