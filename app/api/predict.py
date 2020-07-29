@@ -54,14 +54,17 @@ async def dummy_predict(item: Item):
     recommendations = random.sample(predictions, n_results)
     return {'subreddits': recommendations }
 
-@ router.post('/predict')
-async def kpredict(item: Item):
-   # model = load('/home/dliu/lambda/build/app/api/subreddit_mvp.joblib')   # for local debug
-   # tfidf = load('/home/dliu/lambda/build/app/api/reddit_mvp_tfidf.joblib')
+@ router.post('/nsfw_predict')
+async def nsfw_predict(item: Item):
+    """ WARNING: May return NSFW content! \n
+    load, query the prediction model
+    return : [5 best results]
+    """
+
     model = load('subreddit_mvp.joblib')   
     tfidf = load('reddit_mvp_tfidf.joblib')
     
-    df = pd.read_csv('https://raw.githubusercontent.com/worldwidekatie/BW_4/master/25325_subreddits.csv')
+    df = pd.read_csv('25325_subreddits.csv')
     subreddits = df['subreddit']
 
     predictions = []
@@ -71,4 +74,26 @@ async def kpredict(item: Item):
         predictions.append(subreddits[i])
         output = list(predictions)
     return {'recommendations' : output }
-                                                                    
+                                        
+@ router.post('/predict')
+async def swf_predict(item: Item):
+    """ ingest title, selftext content 
+    spit out 5 best subreddits     uri = f"https://raw.githubusercontent.com/worldwidekatie/BW_4/master/cleaned_subs.csv"
+
+    """
+    df = pd.read_csv("https://raw.githubusercontent.com/worldwidekatie/BW_4/master/cleaned_subs.csv")
+    subreddits1 = df['subreddit']
+    swf_model = load('nn_cleaned.joblib')
+    tfidf = load('tfidf_cleaned.joblib')
+
+    predictions = []
+    query = tfidf.transform([item.title+item.selftext])
+    pred = swf_model.kneighbors(query.todense())
+    print(len(subreddits1))
+    
+    for i in pred[1][0]:
+        if subreddits1[i] not in predictions:
+            predictions.append(subreddits1[i])
+    
+    return {'recommendations': predictions[:5] }
+    
