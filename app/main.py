@@ -7,7 +7,7 @@ from app.api import predict, viz
 app = FastAPI(
     title='DS API',
     description='Data Science API for Post It Here 1 ',
-    version='0.1',
+    version='0.2',
     docs_url='/',
 )
 
