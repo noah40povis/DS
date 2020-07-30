@@ -2,13 +2,17 @@ from fastapi import APIRouter, HTTPException
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+from stylecloud import gen_stylecloud
+import json
+import base64
 
-from .predict import Item
+from .predict import Item, pred 
 from joblib import load
 
 router = APIRouter()
 sfw_model = load('nn_cleaned.joblib')
 sfw_tfidf = load('tfidf_cleaned.joblib')
+ns_model = load('subreddit_mvp.joblib')
 
 tfidf = sfw_tfidf
 model = sfw_model
@@ -47,4 +51,35 @@ async def viz(postbody: Item):
                 )])
  
     return fig.to_json()
+
+
+@router.post('/wordclouds')
+async def wordclouds(postbody: Item):
+    """generate word clouds
+    """
+    df = pd.read_csv('25325_subreddits.csv')
+    
+    list_in = pred(postbody)[:3]
+    
+    icons_list = ["fab fa-reddit-alien","fab fa-reddit-square","fab fa-reddit"]
+    data = {} #dict of serialized imgs
+    for i, subreddit in enumerate(list_in):
+        x = df[df['subreddit']== subreddit]
+        y = x['text'].str.cat(sep=', ')
+        filename = f'reddit{i}.png'
+        gen_stylecloud(text = y,
+                            icon_name=icons_list[i],
+                            palette='colorbrewer.diverging.Spectral_11',
+                            background_color='black',
+                            gradient='horizontal',
+                            stopwords = True, 
+                            output_name=filename)
+  
+  
+    with open(filename, mode='rb') as file:
+        img = file.read()
+    key = f"img{i}"
+    data[key] = base64.encodebytes(img).decode("utf-8")
+    
+    return data
 

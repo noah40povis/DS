@@ -22,5 +22,7 @@ bs4 = "*"
 matplotlib = "*"
 pydantic = "*"
 joblib = {version = "0.16.0"}
+stylecloud = "*"
+
 [requires]
 python_version = "3.7"
