@@ -10,7 +10,7 @@ def test_predict_routes():
     """
     routes_to_test = ['/predict','/nsfw_predict', '/test_predict']
     post_body = {'title': 'foo bar bar barrrr',
-                'selftext': 'banjo didjeridoo djembe khomuz igil',
+                'selftext': 'banjo didjeridoo djembe khomuz igil'
                 }
     for route in routes_to_test:
         response = client.post(route,json=post_body)
