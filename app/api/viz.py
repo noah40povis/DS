@@ -1,45 +1,50 @@
 from fastapi import APIRouter, HTTPException
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
+
+from .predict import Item
+from joblib import load
 
 router = APIRouter()
+sfw_model = load('nn_cleaned.joblib')
+sfw_tfidf = load('tfidf_cleaned.joblib')
 
+tfidf = sfw_tfidf
+model = sfw_model
+df = pd.read_csv('cleaned_subs.csv', usecols=[1])
+subreddits = df['subreddit']
 
-@router.get('/viz/{statecode}')
-async def viz(statecode: str):
-    """Visualize state unemployment rate from Federal Reserve Economic Data"""
+@router.post('/viz')
+async def viz(postbody: Item):
+    query = tfidf.transform([postbody.title+postbody.selftext])   #use sfw
 
-    # Validate the state code
-    statecodes = {
-        'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 
-        'CA': 'California', 'CO': 'Colorado', 'CT': 'Connecticut', 
-        'DE': 'Delaware', 'DC': 'District of Columbia', 'FL': 'Florida', 
-        'GA': 'Georgia', 'HI': 'Hawaii', 'ID': 'Idaho', 'IL': 'Illinois', 
-        'IN': 'Indiana', 'IA': 'Iowa', 'KS': 'Kansas', 'KY': 'Kentucky', 
-        'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland', 
-        'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 
-        'MS': 'Mississippi', 'MO': 'Missouri', 'MT': 'Montana', 
-        'NE': 'Nebraska', 'NV': 'Nevada', 'NH': 'New Hampshire', 
-        'NJ': 'New Jersey', 'NM': 'New Mexico', 'NY': 'New York', 
-        'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio', 
-        'OK': 'Oklahoma', 'OR': 'Oregon', 'PA': 'Pennsylvania', 
-        'RI': 'Rhode Island', 'SC': 'South Carolina', 'SD': 'South Dakota', 
-        'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah', 'VT': 'Vermont', 
-        'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 
-        'WI': 'Wisconsin', 'WY': 'Wyoming'
-    }
-    statecode = statecode.upper()
-    if statecode not in statecodes:
-        raise HTTPException(status_code=404, detail=f'State code {statecode} not found')
+    query_results= model.kneighbors(query.todense())
+    preds = list(zip(query_results[1][0], query_results[0][0]))
+    predictions = []
+    values = []
+    size = []
+    
 
-    # Get the state's unemployment rate data from FRED
-    url = f'https://fred.stlouisfed.org/graph/fredgraph.csv?id={statecode}UR'
-    df = pd.read_csv(url, parse_dates=['DATE'])
-    df.columns = ['Date', 'Percent']
+    for i in preds:
+        if subreddits[i[0]] not in predictions:
+            predictions.append(subreddits[i[0]])
+            values.append(i[1])
+            size.append((i[1]+1)*10)
+        
+    predictions = predictions[:6]
+    values = values[:6]
+    predictions.reverse()
+    values.reverse()
 
-    # Make Plotly figure
-    statename = statecodes[statecode]
-    fig = px.line(df, x='Date', y='Percent', title=f'{statename} Unemployment Rate')
-
-    # Return Plotly figure as JSON string
+    fig = go.Figure(data=[go.Scatter(
+                x=values, y=predictions,
+                mode='markers',
+                marker=dict(
+                            color=values,
+                            size=size
+                            )
+                )])
+ 
     return fig.to_json()
+
