@@ -38,7 +38,7 @@ class Item(BaseModel):
         return pd.DataFrame([dict(self)])
 
 
-def predict(postdataItem, model=sfw_model):
+def pred(postdataItem, model=sfw_model):
     """
     generic function to get the raw prediction list
     parameters:
@@ -58,8 +58,8 @@ def predict(postdataItem, model=sfw_model):
         labels = ns_labels
 
     query = tfidf.transform([item.title + item.selftext])
-    pred = model.kneighbors(query.todense())
-    for i in pred[1][0]:
+    query_result = model.kneighbors(query.todense())
+    for i in query_result[1][0]:
         predictions.append(labels[i])
         output = list(predictions)
     return predictions  # give us the list of predictions
@@ -67,19 +67,19 @@ def predict(postdataItem, model=sfw_model):
 
 @ router.post('/predict')
 async def predict(item: Item):  # SFW
-    return {'recommendations': list(set(predict(item)))[:5]}
+    return {'recommendations': list(set(pred(item)))[:5]}
 
 
-@ router.post('/nsfw_predict')
+@router.post('/nsfw_predict')
 async def nsfw_predict(item: Item):
     """ WARNING: May return NSFW content! \n
     load, query the prediction model
     return : [5 best results]
     """
-    return {'recommendations': predict(item, ns_model)}
+    return {'recommendations': pred(item, ns_model)}
 
 
-@ router.post('/test_predict')
+@router.post('/test_predict')
 async def dummy_predict(item: Item):
     """
     dummy_predict  to return some data for testing the API
@@ -93,7 +93,6 @@ async def dummy_predict(item: Item):
                                                 'reddit5']}
 
     """
-    return
     predictions = ['HomeDepot', 'DunderMifflin', 'hometheater', 'EnterTheGungeon',
                    'cinematography', 'Tinder', 'LearnJapanese',
                    'futarp', 'OnePieceTC', 'Firefighting', 'fleshlight', 'lotr',
