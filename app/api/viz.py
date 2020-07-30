@@ -2,7 +2,9 @@ from fastapi import APIRouter, HTTPException
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-import stylecloud
+from stylecloud import gen_stylecloud
+import json
+import base64
 
 from .predict import Item, pred 
 from joblib import load
@@ -51,22 +53,26 @@ async def viz(postbody: Item):
     return fig.to_json()
 
 
-@router.post('/wordclouds'):
+@router.post('/wordclouds')
 async def wordclouds(postbody: Item):
     """generate word clouds
     """
     df = pd.read_csv('25325_subreddits.csv')
-    list_in = pred(postbody, model= ns_model)['recommendations']
+    
+    list_in = pred(postbody)[:3]
+    
+    icons_list = ["fab fa-reddit-alien","fab fa-reddit-square","fab fa-reddit"]
     data = {} #dict of serialized imgs
     for i, subreddit in enumerate(list_in):
         x = df[df['subreddit']== subreddit]
         y = x['text'].str.cat(sep=', ')
         filename = f'reddit{i}.png'
-        stylecloud.gen_stylecloud(text = y,
-                            icon_name='fab fa-reddit-alien',
+        gen_stylecloud(text = y,
+                            icon_name=icons_list[i],
                             palette='colorbrewer.diverging.Spectral_11',
                             background_color='black',
                             gradient='horizontal',
+                            stopwords = True, 
                             output_name=filename)
   
   
