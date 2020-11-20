@@ -5,3 +5,6 @@ notebooks/nb_selftext_jl.pkl
 notebooks/cleaned_reduced.tsv
 notebooks/reduced30k.tsv
 notebooks/.ipynb_checkpoints/
+reddit0.png
+reddit1.png
+reddit2.png
